@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>个人节税规划工具</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; background: #f0f4f8; color: #1a202c; line-height: 1.6; }
+.container { max-width: 960px; margin: 0 auto; padding: 20px; }
+header { text-align: center; padding: 32px 0 20px; }
+header h1 { font-size: 28px; font-weight: 700; color: #1a56db; }
+header p { color: #64748b; margin-top: 6px; font-size: 14px; }
+.disclaimer { background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; padding: 10px 16px; margin-bottom: 24px; font-size: 13px; color: #92400e; }
+
+/* Cards */
+.card { background: #fff; border-radius: 12px; padding: 24px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06); }
+.card h3 { font-size: 16px; font-weight: 600; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0; display: flex; align-items: center; gap: 8px; }
+.card h3 .icon { font-size: 20px; }
+
+/* Tabs */
+.tabs { display: flex; gap: 4px; margin-bottom: 20px; background: #fff; border-radius: 12px; padding: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+.tab-btn { flex: 1; padding: 12px 16px; border: none; background: transparent; border-radius: 8px; font-size: 15px; font-weight: 500; cursor: pointer; color: #64748b; transition: all 0.2s; }
+.tab-btn:hover { background: #f1f5f9; color: #334155; }
+.tab-btn.active { background: #1a56db; color: #fff; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* Form */
+.form-row { display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 14px; }
+.form-group { flex: 1; min-width: 200px; }
+.form-group label { display: block; font-size: 13px; font-weight: 500; color: #475569; margin-bottom: 4px; }
+.form-group input, .form-group select { width: 100%; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; transition: border-color 0.2s; }
+.form-group input:focus, .form-group select:focus { outline: none; border-color: #1a56db; box-shadow: 0 0 0 3px rgba(26,86,219,0.1); }
+.form-group .hint { font-size: 11px; color: #94a3b8; margin-top: 2px; }
+.form-group input[type="number"] { font-family: inherit; }
+input.currency { text-align: right; }
+
+/* Buttons */
+.btn { padding: 10px 24px; border: none; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.btn-primary { background: #1a56db; color: #fff; width: 100%; margin-top: 8px; }
+.btn-primary:hover { background: #1e40af; }
+
+/* Results */
+.result-card { border-radius: 10px; padding: 20px; margin-top: 16px; }
+.result-card h4 { font-size: 15px; font-weight: 600; margin-bottom: 12px; }
+.compare-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.compare-table td, .compare-table th { padding: 10px 14px; border-bottom: 1px solid #e2e8f0; }
+.compare-table th { text-align: left; font-weight: 600; color: #475569; width: 150px; white-space: nowrap; }
+.compare-table td:last-child { text-align: right; font-variant-numeric: tabular-nums; font-family: "SF Mono", "Cascadia Code", "Consolas", monospace; font-size: 14px; }
+.highlight { background: #f0fdf4; }
+.highlight td { border-color: #bbf7d0; }
+.vs-label { text-align: center; font-weight: 600; color: #64748b; padding: 8px 0; font-size: 13px; }
+.winner { border-left: 3px solid #10b981; background: #f0fdf4; }
+.loser { border-left: 3px solid #94a3b8; }
+.recommendation { margin-top: 16px; padding: 12px 16px; border-radius: 8px; font-weight: 600; font-size: 14px; }
+.rec-better { background: #d1fae5; color: #065f46; }
+.rec-worse { background: #fee2e2; color: #991b1b; }
+.rec-neutral { background: #e0e7ff; color: #3730a3; }
+.amount-big { font-size: 20px; font-weight: 700; }
+.saving { color: #059669; }
+.cost { color: #dc2626; }
+
+/* Collapsible */
+.collapsible-header { cursor: pointer; user-select: none; display: flex; justify-content: space-between; align-items: center; }
+.collapsible-header::after { content: "▸"; font-size: 12px; transition: transform 0.2s; color: #94a3b8; }
+.collapsible-header.open::after { transform: rotate(90deg); }
+.collapsible-body { display: none; padding-top: 16px; }
+.collapsible-body.open { display: block; }
+
+/* Tax breakdown */
+.tax-breakdown { font-size: 13px; color: #475569; margin-top: 12px; padding: 12px; background: #f8fafc; border-radius: 8px; }
+.tax-breakdown .line { display: flex; justify-content: space-between; padding: 3px 0; }
+.tax-breakdown .line.total { font-weight: 700; border-top: 1px solid #e2e8f0; margin-top: 4px; padding-top: 7px; }
+
+@media (max-width: 640px) {
+  .form-group { min-width: 100%; }
+  .container { padding: 12px; }
+  .card { padding: 16px; }
+  .compare-table th { width: 120px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+<header>
+  <h1>💰 个人节税规划工具</h1>
+  <p>中国大陆个人所得税 · 年终奖优化 + 劳务报酬对比<br><span style="font-size:13px;">税得香微信：sz07551111</span></p>
+</header>
+
+<div class="disclaimer">
+  ⚠️ 本工具仅供学习参考，不构成税务建议。具体税务处理请咨询专业税务顾问或税务机关。税法政策可能调整，请以最新法规为准。
+</div>
+
+<!-- ===== COMMON INPUTS ===== -->
+<div class="card" id="commonCard">
+  <h3><span class="icon">📋</span> 基本信息（两个功能共用）</h3>
+
+  <div class="form-row">
+    <div class="form-group">
+      <label>税前月薪（元）</label>
+      <input type="number" id="monthlySalary" class="currency" value="15000" step="100" min="0">
+      <span class="hint">不含年终奖的月度工资</span>
+    </div>
+    <div class="form-group">
+      <label>每月五险一金个人部分（元）</label>
+      <input type="number" id="monthlySocial" class="currency" value="2500" step="50" min="0">
+      <span class="hint">养老8%+医疗2%+失业0.5%+公积金</span>
+    </div>
+    <div class="form-group">
+      <label>年度其他已预扣税款（元）</label>
+      <input type="number" id="otherTax" class="currency" value="0" step="100" min="0">
+      <span class="hint">如有其他综合所得已预缴的税款</span>
+    </div>
+  </div>
+
+  <!-- Special Additional Deductions -->
+  <div class="collapsible-header" onclick="toggleCollapsible(this)" style="margin-top:4px; font-weight:600; color:#475569; font-size:14px;">
+    专项附加扣除（点击展开）
+  </div>
+  <div class="collapsible-body" id="deductionsBody">
+    <div class="form-row">
+      <div class="form-group">
+        <label>子女教育</label>
+        <select id="childEdu">
+          <option value="0">0个子女</option>
+          <option value="1">1个子女</option>
+          <option value="2">2个子女</option>
+          <option value="3">3个子女</option>
+        </select>
+        <span class="hint">¥2,000/月/子女</span>
+      </div>
+      <div class="form-group">
+        <label>3岁以下婴幼儿照护</label>
+        <select id="childUnder3">
+          <option value="0">0个</option>
+          <option value="1">1个</option>
+          <option value="2">2个</option>
+        </select>
+        <span class="hint">¥2,000/月/每个婴幼儿</span>
+      </div>
+      <div class="form-group">
+        <label>继续教育</label>
+        <select id="contEdu">
+          <option value="0">无</option>
+          <option value="4800">学历继续教育 (¥400/月)</option>
+          <option value="3600">职业资格证书 (¥3,600/年)</option>
+        </select>
+        <span class="hint">学历¥400/月 或 证书¥3,600/年（二选一）</span>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>住房贷款利息</label>
+        <select id="housingLoan">
+          <option value="0">无</option>
+          <option value="12000">有（首套房）</option>
+        </select>
+        <span class="hint">¥1,000/月，限首套房</span>
+      </div>
+      <div class="form-group">
+        <label>住房租金</label>
+        <select id="housingRent">
+          <option value="0">无</option>
+          <option value="18000">直辖市/省会/计划单列市 (¥1,500/月)</option>
+          <option value="13200">市辖区人口>100万的城市 (¥1,100/月)</option>
+          <option value="9600">市辖区人口≤100万的城市 (¥800/月)</option>
+        </select>
+        <span class="hint">房贷利息与住房租金二选一</span>
+      </div>
+      <div class="form-group">
+        <label>赡养老人</label>
+        <select id="elderly">
+          <option value="0">不适用</option>
+          <option value="36000">独生子女 (¥3,000/月)</option>
+          <option value="18000">非独生子女·均摊 (¥1,500/月)</option>
+          <option value="12000">非独生子女·约定 (¥1,000/月)</option>
+        </select>
+        <span class="hint">赡养一位及以上年满60周岁老人</span>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>大病医疗（年度自付，元）</label>
+        <input type="number" id="seriousIllness" class="currency" value="0" step="100" min="0">
+        <span class="hint">医保目录内自付超¥15,000的部分，上限¥80,000</span>
+      </div>
+      <div class="form-group">
+        <label>个人养老金（年度，元）</label>
+        <input type="number" id="pension" class="currency" value="0" step="100" min="0" max="12000">
+        <span class="hint">上限¥12,000/年</span>
+      </div>
+    </div>
+    <div style="font-size:12px; color:#94a3b8; margin-top:4px;">
+      年扣除合计：<strong id="deductionTotal">¥0</strong>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TABS ===== -->
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('bonus')">🎁 年终奖计税优化</button>
+  <button class="tab-btn" onclick="switchTab('labor')">📝 劳务报酬 vs 工资薪金</button>
+</div>
+
+<!-- ===== TAB 1: BONUS ===== -->
+<div class="tab-content active" id="tab-bonus">
+  <div class="card">
+    <h3><span class="icon">🎁</span> 年终奖单独计税 vs 并入综合所得</h3>
+    <div class="form-row">
+      <div class="form-group">
+        <label>年终奖金额（元）</label>
+        <input type="number" id="bonusAmount" class="currency" value="50000" step="100" min="0">
+        <span class="hint">全年一次性奖金</span>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="compareBonus()">计算对比</button>
+    <div id="bonusResult"></div>
+  </div>
+</div>
+
+<!-- ===== TAB 2: LABOR VS SALARY ===== -->
+<div class="tab-content" id="tab-labor">
+  <div class="card">
+    <h3><span class="icon">📝</span> 劳务报酬 vs 工资薪金税负对比</h3>
+    <p style="font-size:13px;color:#64748b;margin-bottom:16px;">比较同一笔收入以"工资薪金"还是"劳务报酬"形式取得时的税负差异。劳务报酬在年度汇算时按80%计入综合所得，实际税负通常更低。</p>
+    <div class="form-row">
+      <div class="form-group">
+        <label>额外收入金额（元/年）</label>
+        <input type="number" id="extraIncome" class="currency" value="100000" step="1000" min="0">
+        <span class="hint">要对比的这笔收入的总金额</span>
+      </div>
+      <div class="form-group">
+        <label>劳务报酬单次支付金额（元）</label>
+        <input type="number" id="laborPerPayment" class="currency" value="100000" step="1000" min="0">
+        <span class="hint">预扣税按此计算（若分多次支付，可调小此项）</span>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="compareLabor()">计算对比</button>
+    <div id="laborResult"></div>
+  </div>
+</div>
+
+<footer style="text-align:center; color:#94a3b8; font-size:12px; padding:24px 0;">
+  本工具基于中国大陆现行个人所得税法计算（截至2025年）· 年终奖单独计税政策有效期至2027年12月31日
+</footer>
+</div>
+
+<script>
+// ==================== TAX BRACKETS ====================
+
+// 综合所得年度税率表（个人所得税法附表一）
+const ANNUAL_BRACKETS = [
+  { max: 36000,    rate: 0.03, qd: 0 },
+  { max: 144000,   rate: 0.10, qd: 2520 },
+  { max: 300000,   rate: 0.20, qd: 16920 },
+  { max: 420000,   rate: 0.25, qd: 31920 },
+  { max: 660000,   rate: 0.30, qd: 52920 },
+  { max: 960000,   rate: 0.35, qd: 85920 },
+  { max: Infinity, rate: 0.45, qd: 181920 }
+];
+
+// 年终奖按月换算后的税率表（月度）
+const BONUS_BRACKETS = [
+  { max: 3000,   rate: 0.03, qd: 0 },
+  { max: 12000,  rate: 0.10, qd: 210 },
+  { max: 25000,  rate: 0.20, qd: 1410 },
+  { max: 35000,  rate: 0.25, qd: 2660 },
+  { max: 55000,  rate: 0.30, qd: 4410 },
+  { max: 80000,  rate: 0.35, qd: 7160 },
+  { max: Infinity, rate: 0.45, qd: 15160 }
+];
+
+// 劳务报酬预扣税率表
+const LABOR_BRACKETS = [
+  { max: 20000,   rate: 0.20, qd: 0 },
+  { max: 50000,   rate: 0.30, qd: 2000 },
+  { max: Infinity, rate: 0.40, qd: 7000 }
+];
+
+// ==================== UTILS ====================
+
+function sum(arr) { return arr.reduce((a, b) => a + b, 0); }
+
+function calcBracketTax(amount, brackets) {
+  if (amount <= 0) return 0;
+  for (const b of brackets) {
+    if (amount <= b.max) return amount * b.rate - b.qd;
+  }
+  const last = brackets[brackets.length - 1];
+  return amount * last.rate - last.qd;
+}
+
+function getMarginalRate(taxable, brackets) {
+  if (taxable <= 0) return 0;
+  for (const b of brackets) {
+    if (taxable <= b.max) return b.rate;
+  }
+  return brackets[brackets.length - 1].rate;
+}
+
+function fmt(n) {
+  if (Math.abs(n) < 0.01) return '¥0';
+  return (n < 0 ? '-' : '') + '¥' + Math.abs(n).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function pct(a, b) {
+  if (b === 0) return '—';
+  return (a / b * 100).toFixed(1) + '%';
+}
+
+// ==================== COMMON INPUTS ====================
+
+function getCommon() {
+  const monthlySalary = parseFloat(document.getElementById('monthlySalary').value) || 0;
+  const monthlySocial = parseFloat(document.getElementById('monthlySocial').value) || 0;
+  const otherTax = parseFloat(document.getElementById('otherTax').value) || 0;
+
+  const childEdu = parseInt(document.getElementById('childEdu').value) || 0;
+  const childUnder3 = parseInt(document.getElementById('childUnder3').value) || 0;
+  const contEdu = parseInt(document.getElementById('contEdu').value) || 0;
+  const housingLoan = parseInt(document.getElementById('housingLoan').value) || 0;
+  const housingRent = parseInt(document.getElementById('housingRent').value) || 0;
+  const elderly = parseInt(document.getElementById('elderly').value) || 0;
+  const illness = parseFloat(document.getElementById('seriousIllness').value) || 0;
+  const pension = parseFloat(document.getElementById('pension').value) || 0;
+
+  // 房贷利息和住房租金不能同时享受，取较高者
+  const effectiveHousing = Math.max(housingLoan, housingRent);
+
+  // 大病医疗：仅超过15000且≤95000的部分可扣除（上限80000）
+  const effectiveIllness = Math.max(0, Math.min((illness - 15000), 80000));
+
+  const annualDeductions = sum([
+    childEdu * 2000 * 12,
+    childUnder3 * 2000 * 12,
+    contEdu,
+    effectiveHousing,
+    elderly,
+    effectiveIllness,
+    pension
+  ]);
+
+  // Update display
+  document.getElementById('deductionTotal').textContent = fmt(annualDeductions);
+
+  return {
+    monthlySalary,
+    monthlySocial,
+    annualSalary: monthlySalary * 12,
+    annualSocial: monthlySocial * 12,
+    annualDeductions,
+    otherTax
+  };
+}
+
+// ==================== ANNUAL TAX CALC ====================
+
+function calcAnnualTax(comprehensiveIncome, annualSocial, annualDeductions) {
+  const taxable = comprehensiveIncome - 60000 - annualSocial - annualDeductions;
+  return { taxable, tax: calcBracketTax(taxable, ANNUAL_BRACKETS) };
+}
+
+// ==================== BONUS ====================
+
+function compareBonus() {
+  const c = getCommon();
+  const bonus = parseFloat(document.getElementById('bonusAmount').value) || 0;
+
+  if (c.annualSalary === 0 && bonus === 0) {
+    document.getElementById('bonusResult').innerHTML = '<p style="color:#dc2626;margin-top:12px;">请输入月薪或年终奖金额</p>';
+    return;
+  }
+
+  // 方案A：年终奖单独计税
+  // 综合所得不含年终奖
+  const compA = c.annualSalary;
+  const rA = calcAnnualTax(compA, c.annualSocial, c.annualDeductions);
+  const bonusTax = calcBracketTax(bonus, BONUS_BRACKETS);
+  const totalTaxA = Math.max(0, rA.tax) + bonusTax;
+
+  // Find which bonus bracket applied
+  const monthlyEq = bonus / 12;
+  let bonusRate = 0, bonusQD = 0;
+  for (const b of BONUS_BRACKETS) {
+    if (monthlyEq <= b.max) { bonusRate = b.rate; bonusQD = b.qd; break; }
+  }
+
+  // 方案B：年终奖并入综合所得
+  const compB = c.annualSalary + bonus;
+  const rB = calcAnnualTax(compB, c.annualSocial, c.annualDeductions);
+  const totalTaxB = Math.max(0, rB.tax);
+
+  // Find which annual bracket the consolidated income falls into
+  let consRate = 0;
+  const consTaxable = rB.taxable;
+  for (const b of ANNUAL_BRACKETS) {
+    if (consTaxable > 0 && consTaxable <= b.max) { consRate = b.rate; break; }
+  }
+  if (consTaxable > ANNUAL_BRACKETS[ANNUAL_BRACKETS.length - 1].max) {
+    consRate = ANNUAL_BRACKETS[ANNUAL_BRACKETS.length - 1].rate;
+  }
+  if (consTaxable <= 0) consRate = 0;
+
+  const diff = totalTaxA - totalTaxB;
+
+  let recClass, recText;
+  if (diff > 100) {
+    recClass = 'rec-better';
+    recText = `✅ 建议：选择"并入综合所得"更优，可节省税款约 ${fmt(Math.abs(diff))}`;
+  } else if (diff < -100) {
+    recClass = 'rec-worse';
+    recText = `✅ 建议：选择"单独计税"更优，可节省税款约 ${fmt(Math.abs(diff))}`;
+  } else {
+    recClass = 'rec-neutral';
+    recText = `ℹ️ 两种方式税负差异很小（${fmt(Math.abs(diff))}），两种方案均可。`;
+  }
+
+  const resultHTML = `
+    <div class="result-card" style="border:1px solid #e2e8f0; margin-top:16px;">
+      <h4>📊 对比结果</h4>
+      <div class="tax-breakdown">
+        <div class="line"><span>年度工资薪金</span><span>${fmt(c.annualSalary)}</span></div>
+        <div class="line"><span>年终奖金额</span><span>${fmt(bonus)}</span></div>
+        <div class="line"><span>基本减除费用</span><span>−¥60,000</span></div>
+        <div class="line"><span>五险一金（年）</span><span>−${fmt(c.annualSocial)}</span></div>
+        <div class="line"><span>专项附加扣除（年）</span><span>−${fmt(c.annualDeductions)}</span></div>
+      </div>
+
+      <div style="margin-top:16px;">
+        <div class="vs-label">── 方案对比 ──</div>
+      </div>
+
+      <table class="compare-table">
+        <tr><th></th><th>方案A：单独计税</th><th>方案B：并入综合所得</th></tr>
+        <tr>
+          <td>综合所得应纳税所得额</td>
+          <td>${fmt(rA.taxable)}</td>
+          <td>${fmt(rB.taxable)}</td>
+        </tr>
+        <tr>
+          <td>适用边际税率</td>
+          <td>${(getMarginalRate(rA.taxable, ANNUAL_BRACKETS) * 100).toFixed(0) + '%'}</td>
+          <td>${(getMarginalRate(rB.taxable, ANNUAL_BRACKETS) * 100).toFixed(0) + '%'}</td>
+        </tr>
+        <tr>
+          <td>综合所得应纳税额</td>
+          <td>${fmt(Math.max(0, rA.tax))}</td>
+          <td>${fmt(Math.max(0, rB.tax))}</td>
+        </tr>
+        <tr>
+          <td>年终奖应纳税额</td>
+          <td>${fmt(bonusTax)} <span style="font-size:11px;color:#94a3b8;">(税率${(bonusRate*100).toFixed(0)}%)</span></td>
+          <td>已并入综合所得</td>
+        </tr>
+        <tr class="${diff > 0 ? 'loser' : 'winner'}" style="font-weight:700;">
+          <td>合计应纳税额</td>
+          <td>${fmt(totalTaxA)}</td>
+          <td>${fmt(totalTaxB)}</td>
+        </tr>
+        <tr>
+          <td>实际税负率</td>
+          <td>${pct(totalTaxA, c.annualSalary + bonus)}</td>
+          <td>${pct(totalTaxB, c.annualSalary + bonus)}</td>
+        </tr>
+      </table>
+
+      <div class="recommendation ${recClass}" style="${diff > 0 ? 'background:#d1fae5;color:#065f46;' : diff < -100 ? 'background:#fee2e2;color:#991b1b;' : 'background:#e0e7ff;color:#3730a3;'}">
+        ${recText}
+        ${Math.abs(diff) > 100 ? '<br><span style="font-size:12px;font-weight:400;">差异：' + fmt(Math.abs(diff)) + ' | ' + (diff > 0 ? '单独计税多缴税款' : '并入综合所得多缴税款') + '</span>' : ''}
+      </div>
+
+      <div style="font-size:12px;color:#94a3b8;margin-top:12px;">
+        💡 年终奖金额处于"税率跳档临界点"附近时（如¥36,000、¥144,000、¥300,000、¥420,000、¥660,000附近），单独计税可能出现"多发1元多缴数千税"的情况，需格外注意。
+      </div>
+    </div>
+  `;
+
+  document.getElementById('bonusResult').innerHTML = resultHTML;
+}
+
+// ==================== LABOR VS SALARY ====================
+
+function compareLabor() {
+  const c = getCommon();
+  const extraIncome = parseFloat(document.getElementById('extraIncome').value) || 0;
+  const laborPerPayment = parseFloat(document.getElementById('laborPerPayment').value) || extraIncome;
+
+  if (extraIncome <= 0) {
+    document.getElementById('laborResult').innerHTML = '<p style="color:#dc2626;margin-top:12px;">请输入额外收入金额</p>';
+    return;
+  }
+
+  // === 方案A：作为工资薪金 ===
+  // 100% 计入综合所得
+  const compA = c.annualSalary + extraIncome;
+  const rA = calcAnnualTax(compA, c.annualSocial, c.annualDeductions);
+  const baseTax = calcAnnualTax(c.annualSalary, c.annualSocial, c.annualDeductions).tax;
+  const salaryAddTax = Math.max(0, rA.tax - Math.max(0, baseTax));
+  const totalTaxA = Math.max(0, rA.tax);
+
+  // === 方案B：作为劳务报酬 ===
+  // 80% 计入综合所得（年度汇算）
+  // 同时计算预扣税
+  const laborContribution = extraIncome * 0.8;
+  const compB = c.annualSalary + laborContribution;
+  const rB = calcAnnualTax(compB, c.annualSocial, c.annualDeductions);
+  const laborAddTax = Math.max(0, rB.tax - Math.max(0, baseTax));
+  const totalTaxB = Math.max(0, rB.tax);
+
+  // 劳务报酬预扣税
+  const withholdingTax = calcLaborWithholding(laborPerPayment);
+
+  const diff = totalTaxA - totalTaxB;
+  const cashFlowDiff = totalTaxA - withholdingTax; // 对比预扣 vs 薪金年度税
+
+  let recClass, recText;
+  if (diff > 100) {
+    recClass = 'rec-better';
+    recText = `✅ 以"劳务报酬"形式取得收入，税负更低，年度汇算可节省约 ${fmt(diff)}。`;
+  } else if (diff < -100) {
+    recClass = 'rec-worse';
+    recText = `⚠️ 以"工资薪金"形式取得收入，税负更低，可节省约 ${fmt(Math.abs(diff))}。`;
+  } else {
+    recClass = 'rec-neutral';
+    recText = `ℹ️ 两种方式税负差异很小。`;
+  }
+
+  const resultHTML = `
+    <div class="result-card" style="border:1px solid #e2e8f0; margin-top:16px;">
+      <h4>📊 税负对比结果</h4>
+
+      <div class="tax-breakdown">
+        <div class="line"><span>现有工资薪金（年）</span><span>${fmt(c.annualSalary)}</span></div>
+        <div class="line"><span>额外收入金额（年）</span><span>${fmt(extraIncome)}</span></div>
+        <div class="line"><span>—— 劳务报酬计入综合所得</span><span>${fmt(laborContribution)}（80%）</span></div>
+        <div class="line"><span>基本减除费用</span><span>−¥60,000</span></div>
+        <div class="line"><span>五险一金（年）</span><span>−${fmt(c.annualSocial)}</span></div>
+        <div class="line"><span>专项附加扣除（年）</span><span>−${fmt(c.annualDeductions)}</span></div>
+      </div>
+
+      <div style="margin-top:16px;">
+        <div class="vs-label">── 方案对比 ──</div>
+      </div>
+
+      <table class="compare-table">
+        <tr><th></th><th>方案A：工资薪金</th><th>方案B：劳务报酬</th></tr>
+        <tr>
+          <td>计入综合所得金额</td>
+          <td>${fmt(extraIncome)}（100%）</td>
+          <td>${fmt(laborContribution)}（80%）</td>
+        </tr>
+        <tr>
+          <td>综合所得应纳税所得额</td>
+          <td>${fmt(rA.taxable)}</td>
+          <td>${fmt(rB.taxable)}</td>
+        </tr>
+        <tr>
+          <td>适用边际税率</td>
+          <td>${(getMarginalRate(rA.taxable, ANNUAL_BRACKETS) * 100).toFixed(0) + '%'}</td>
+          <td>${(getMarginalRate(rB.taxable, ANNUAL_BRACKETS) * 100).toFixed(0) + '%'}</td>
+        </tr>
+        <tr>
+          <td>年度综合所得税额</td>
+          <td>${fmt(totalTaxA)}</td>
+          <td>${fmt(totalTaxB)}</td>
+        </tr>
+        <tr>
+          <td>额外收入产生的增量税</td>
+          <td>${fmt(salaryAddTax)}</td>
+          <td>${fmt(laborAddTax)}</td>
+        </tr>
+        <tr style="font-size:12px;color:#64748b;">
+          <td>预估预扣/预缴额</td>
+          <td>${fmt(salaryAddTax)}<br><span style="font-size:11px;">(月度累计预扣)</span></td>
+          <td>${fmt(withholdingTax)}<br><span style="font-size:10px;">(单次支付预扣${pct(withholdingTax, extraIncome)})</span></td>
+        </tr>
+        <tr class="${diff > 0 ? 'winner' : 'loser'}" style="font-weight:700;">
+          <td>实际税负（汇算清缴后）</td>
+          <td>${fmt(totalTaxA)}</td>
+          <td>${fmt(totalTaxB)}</td>
+        </tr>
+        <tr>
+          <td>汇算退税/补税</td>
+          <td>—</td>
+          <td style="color:${withholdingTax > laborAddTax ? '#059669' : '#dc2626'}">
+            ${fmt(withholdingTax - laborAddTax)}
+            <span style="font-size:11px;">(${withholdingTax > laborAddTax ? '可退税' : '需补税'})</span>
+          </td>
+        </tr>
+        <tr>
+          <td>实际税负率</td>
+          <td>${pct(totalTaxA, c.annualSalary + extraIncome)}</td>
+          <td>${pct(totalTaxB, c.annualSalary + extraIncome)}</td>
+        </tr>
+      </table>
+
+      <div class="recommendation ${recClass}">
+        ${recText}
+        ${Math.abs(diff) > 100 ? '<br><span style="font-size:12px;font-weight:400;">税负差异：' + fmt(Math.abs(diff)) + '</span>' : ''}
+      </div>
+
+      <div style="font-size:12px;color:#64748b;margin-top:8px;line-height:1.5;">
+        💡 <strong>核心原理：</strong>劳务报酬在年度汇算时仅按<strong>80%</strong>计入综合所得（相当于有20%的收入无需纳税），因此同等收入下劳务报酬的实际税负通常低于工资薪金。但劳务报酬预扣税率较高（20%/30%/40%），造成"先多缴、后退税"的现金流差异。
+      </div>
+    </div>
+  `;
+
+  document.getElementById('laborResult').innerHTML = resultHTML;
+}
+
+// ==================== LABOR WITHHOLDING ====================
+
+function calcLaborWithholding(payment) {
+  if (payment <= 0) return 0;
+  // 预扣应纳税所得额
+  let taxable;
+  if (payment <= 4000) {
+    taxable = payment - 800;
+  } else {
+    taxable = payment * 0.8;
+  }
+  if (taxable <= 0) return 0;
+  return calcBracketTax(taxable, LABOR_BRACKETS);
+}
+
+// ==================== UI HELPERS ====================
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.querySelector(`.tab-btn[onclick*="${tab}"]`).classList.add('active');
+  document.getElementById('tab-' + tab).classList.add('active');
+}
+
+function toggleCollapsible(header) {
+  header.classList.toggle('open');
+  header.nextElementSibling.classList.toggle('open');
+}
+
+// ==================== INIT ====================
+// Update deduction display on any input change
+document.querySelectorAll('input, select').forEach(el => {
+  el.addEventListener('input', () => getCommon());
+  el.addEventListener('change', () => getCommon());
+});
+
+// Initial calculation
+getCommon();
+</script>
+</body>
+</html>
