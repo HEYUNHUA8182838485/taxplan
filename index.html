@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>个人节税规划工具</title>
+<title>个人所得税智能节税测算规划工具</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; background: #f0f4f8; color: #1a202c; line-height: 1.6; }
@@ -11,7 +11,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC"
 header { text-align: center; padding: 32px 0 20px; }
 header h1 { font-size: 28px; font-weight: 700; color: #1a56db; }
 header p { color: #64748b; margin-top: 6px; font-size: 14px; }
-.disclaimer { background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; padding: 10px 16px; margin-bottom: 24px; font-size: 13px; color: #92400e; }
+.disclaimer { background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; padding: 10px 16px; margin-bottom: 24px; font-size: 13px; color: #92400e; text-align: center; }
 
 /* Cards */
 .card { background: #fff; border-radius: 12px; padding: 24px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06); }
@@ -40,6 +40,59 @@ input.currency { text-align: right; }
 .btn { padding: 10px 24px; border: none; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
 .btn-primary { background: #1a56db; color: #fff; width: 100%; margin-top: 8px; }
 .btn-primary:hover { background: #1e40af; }
+.btn-clear { background: #fff; color: #dc2626; border: 1px solid #fca5a5; padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+.btn-clear:hover { background: #fef2f2; color: #b91c1c; border-color: #f87171; }
+
+/* Month grid */
+.month-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
+.month-item { text-align: center; }
+.month-item label { font-size: 11px; color: #64748b; display: block; margin-bottom: 2px; }
+.month-item input { width: 100%; padding: 7px 4px; text-align: right; font-size: 13px; border: 1px solid #cbd5e1; border-radius: 5px; }
+.month-item input:focus { outline: none; border-color: #1a56db; box-shadow: 0 0 0 2px rgba(26,86,219,0.1); }
+
+/* Editable & readonly inputs */
+.form-group:has(input:not([readonly]):not([type="hidden"])) label::before { content: "✏️ "; }
+.form-group:has(input[readonly]) label::before { content: "📊 "; }
+input[type="number"]:not([readonly]) { background: #f0f7ff; border-color: #93c5fd; color: #1a202c; }
+input[type="number"]:not([readonly]):focus { border-color: #1a56db; box-shadow: 0 0 0 3px rgba(26,86,219,0.12); }
+input[type="number"][readonly] { background: #e2e8f0; color: #1a202c; cursor: not-allowed; user-select: none; pointer-events: none; }
+.summary-box { background: #e2e8f0; color: #1a202c; cursor: not-allowed; user-select: none; pointer-events: none; }
+input[type="number"]::placeholder { color: #94a3b8; font-weight: 400; }
+
+/* Orange collapsible headers (monthly detail & deductions) */
+.collapsible-header.action {
+  background: #fff7ed; border: 1px solid #fdba74; border-radius: 8px;
+  padding: 11px 14px; font-weight: 700; color: #c2410c; font-size: 14px;
+  display: flex; align-items: center; gap: 8px; justify-content: flex-start;
+}
+.collapsible-header.action:hover { background: #ffedd5; }
+.collapsible-header.action::before { content: "🔽"; font-size: 12px; }
+.collapsible-header.action.open::before { content: "🔼"; }
+.collapsible-tag {
+  display: inline-block; background: #ffedd5; color: #c2410c;
+  font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 4px;
+  margin-right: 6px; white-space: nowrap;
+}
+.collapsible-header.action .collapsible-tag { background: #fed7aa; }
+
+/* Info panels */
+.info-section { margin-top: 24px; }
+.info-section .collapsible-header {
+  background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;
+  padding: 12px 16px; margin-bottom: 4px; font-weight: 600; color: #334155; font-size: 14px;
+}
+.info-section .collapsible-header:hover { background: #f1f5f9; }
+.info-section .collapsible-body { background: #fff; border: 1px solid #e2e8f0; border-top: none; border-radius: 0 0 8px 8px; padding: 14px 16px; }
+.info-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.info-table th { background: #f1f5f9; padding: 8px 10px; text-align: left; font-size: 12px; color: #475569; font-weight: 600; }
+.info-table td { padding: 7px 10px; border-bottom: 1px solid #f1f5f9; }
+.info-table tr:last-child td { border-bottom: none; }
+.info-table .cliff { background: #fef2f2; }
+.info-table .cliff td { color: #dc2626; font-weight: 600; }
+.info-table .dead { background: #fff7ed; }
+.info-table .dead td { color: #c2410c; }
+.info-tip { font-size: 12px; color: #64748b; margin-top: 8px; line-height: 1.6; }
+.card-header-row { display: flex; justify-content: space-between; align-items: center; }
 
 /* Results */
 .result-card { border-radius: 10px; padding: 20px; margin-top: 16px; }
@@ -53,7 +106,7 @@ input.currency { text-align: right; }
 .vs-label { text-align: center; font-weight: 600; color: #64748b; padding: 8px 0; font-size: 13px; }
 .winner { border-left: 3px solid #10b981; background: #f0fdf4; }
 .loser { border-left: 3px solid #94a3b8; }
-.recommendation { margin-top: 16px; padding: 12px 16px; border-radius: 8px; font-weight: 600; font-size: 14px; }
+.recommendation { margin-top: 16px; padding: 12px 16px; border-radius: 8px; font-weight: 600; font-size: 14px; text-align: center; }
 .rec-better { background: #d1fae5; color: #065f46; }
 .rec-worse { background: #fee2e2; color: #991b1b; }
 .rec-neutral { background: #e0e7ff; color: #3730a3; }
@@ -74,18 +127,54 @@ input.currency { text-align: right; }
 .tax-breakdown .line.total { font-weight: 700; border-top: 1px solid #e2e8f0; margin-top: 4px; padding-top: 7px; }
 
 @media (max-width: 640px) {
+  .container { padding: 8px; }
+  .card { padding: 12px; margin-bottom: 12px; border-radius: 10px; }
+  .card h3 { font-size: 14px; }
+  .card-header-row h3 { font-size: 14px; }
   .form-group { min-width: 100%; }
-  .container { padding: 12px; }
-  .card { padding: 16px; }
-  .compare-table th { width: 120px; }
+  .form-row { gap: 8px; margin-bottom: 8px; }
+  .form-group input, .form-group select { padding: 10px 10px; font-size: 16px; }
+  .form-group label { font-size: 13px; }
+  .form-group .hint { font-size: 11px; }
+  header { padding: 14px 0 10px; }
+  header h1 { font-size: 20px; }
+  header p { font-size: 11px; }
+  .tabs { padding: 3px; margin-bottom: 12px; gap: 2px; }
+  .tab-btn { padding: 10px 6px; font-size: 12px; line-height: 1.3; }
+  .btn { padding: 12px 16px; font-size: 14px; }
+  .btn-clear { padding: 6px 12px; font-size: 12px; }
+  .collapsible-header.action { font-size: 13px; padding: 10px 12px; }
+  .collapsible-tag { font-size: 10px; padding: 1px 6px; }
+  .disclaimer { font-size: 11px; padding: 8px 10px; margin-bottom: 14px; }
+  .collapsible-header { font-size: 13px; }
+  /* Table: scroll horizontally on small screens */
+  .compare-table { font-size: 12px; min-width: 480px; }
+  .compare-table th { font-size: 11px; white-space: nowrap; }
+  .compare-table td, .compare-table th { padding: 6px 5px; }
+  .compare-table td:last-child { font-size: 12px; }
+  .result-card { overflow-x: auto; -webkit-overflow-scrolling: touch; padding: 10px; }
+  .result-card h4 { font-size: 13px; }
+  .tax-breakdown { font-size: 11px; padding: 8px; }
+  .tax-breakdown .line { padding: 2px 0; }
+  .recommendation { font-size: 12px; padding: 8px 10px; }
+  .month-grid { grid-template-columns: repeat(3, 1fr); gap: 4px; }
+  .month-item label { font-size: 10px; }
+  .month-item input { padding: 10px 2px; font-size: 16px; }
+  .vs-label { font-size: 11px; }
+  .info-section .collapsible-header { font-size: 13px; padding: 10px 12px; }
+  .info-section .collapsible-body { padding: 10px; }
+  .info-table { font-size: 11px; }
+  .info-table th, .info-table td { padding: 5px 6px; }
+  .info-tip { font-size: 11px; }
+  footer { font-size: 10px; padding: 12px 0; }
 }
 </style>
 </head>
 <body>
 <div class="container">
 <header>
-  <h1>💰 个人节税规划工具</h1>
-  <p>中国大陆个人所得税 · 年终奖优化 + 劳务报酬对比<br><span style="font-size:13px;">税得香微信：sz07551111</span></p>
+  <h1>💰 个人所得税智能节税测算规划工具</h1>
+  <p>中国大陆个人所得税 · 年终奖优化 + 劳务报酬对比</p>
 </header>
 
 <div class="disclaimer">
@@ -94,29 +183,47 @@ input.currency { text-align: right; }
 
 <!-- ===== COMMON INPUTS ===== -->
 <div class="card" id="commonCard">
-  <h3><span class="icon">📋</span> 基本信息（两个功能共用）</h3>
+  <div class="card-header-row">
+    <h3 style="border:none;margin:0;padding:0;"><span class="icon">📋</span> 基本信息（两个功能共用）</h3>
+    <button class="btn-clear" onclick="clearAll()">✕ 清空</button>
+  </div>
 
   <div class="form-row">
     <div class="form-group">
-      <label>税前月薪（元）</label>
-      <input type="number" id="monthlySalary" class="currency" value="15000" step="100" min="0">
-      <span class="hint">不含年终奖的月度工资</span>
+      <label>税前月薪汇总（元）</label>
+      <input type="text" id="monthlySalary" class="currency summary-box" placeholder="自动汇总" readonly style="background:#e2e8f0;font-weight:600;color:#1a202c;">
+      <span class="hint">1-12月税前月薪自动汇总</span>
     </div>
     <div class="form-group">
-      <label>每月五险一金个人部分（元）</label>
-      <input type="number" id="monthlySocial" class="currency" value="2500" step="50" min="0">
-      <span class="hint">养老8%+医疗2%+失业0.5%+公积金</span>
+      <label>五险一金个人部分汇总（元）</label>
+      <input type="text" id="monthlySocial" class="currency summary-box" placeholder="自动汇总" readonly style="background:#e2e8f0;font-weight:600;color:#1a202c;">
+      <span class="hint">1-12月五险一金自动汇总</span>
     </div>
     <div class="form-group">
       <label>年度其他已预扣税款（元）</label>
-      <input type="number" id="otherTax" class="currency" value="0" step="100" min="0">
+      <input type="number" id="otherTax" class="currency" placeholder="0" step="100" min="0">
       <span class="hint">如有其他综合所得已预缴的税款</span>
     </div>
   </div>
 
+  <!-- Monthly salary & social detail -->
+  <div class="collapsible-header action" onclick="toggleCollapsible(this)">
+    <span class="collapsible-tag">📋 填写</span>按月工资五险一金填写明细（点击展开，各月不同可分别填写）
+  </div>
+  <div class="collapsible-body" id="monthlyDetailBody">
+    <div style="margin-bottom:14px;">
+      <label style="font-size:12px;font-weight:600;color:#475569;margin-bottom:6px;display:block;">税前月薪（元）</label>
+      <div class="month-grid" id="salaryGrid"></div>
+    </div>
+    <div>
+      <label style="font-size:12px;font-weight:600;color:#475569;margin-bottom:6px;display:block;">五险一金个人部分（元）</label>
+      <div class="month-grid" id="socialGrid"></div>
+    </div>
+  </div>
+
   <!-- Special Additional Deductions -->
-  <div class="collapsible-header" onclick="toggleCollapsible(this)" style="margin-top:4px; font-weight:600; color:#475569; font-size:14px;">
-    专项附加扣除（点击展开）
+  <div class="collapsible-header action" onclick="toggleCollapsible(this)">
+    <span class="collapsible-tag">📋 填写</span>专项附加扣除（点击展开）
   </div>
   <div class="collapsible-body" id="deductionsBody">
     <div class="form-row">
@@ -182,12 +289,12 @@ input.currency { text-align: right; }
     <div class="form-row">
       <div class="form-group">
         <label>大病医疗（年度自付，元）</label>
-        <input type="number" id="seriousIllness" class="currency" value="0" step="100" min="0">
+        <input type="number" id="seriousIllness" class="currency" placeholder="0" step="100" min="0">
         <span class="hint">医保目录内自付超¥15,000的部分，上限¥80,000</span>
       </div>
       <div class="form-group">
         <label>个人养老金（年度，元）</label>
-        <input type="number" id="pension" class="currency" value="0" step="100" min="0" max="12000">
+        <input type="number" id="pension" class="currency" placeholder="0" step="100" min="0" max="12000">
         <span class="hint">上限¥12,000/年</span>
       </div>
     </div>
@@ -210,7 +317,7 @@ input.currency { text-align: right; }
     <div class="form-row">
       <div class="form-group">
         <label>年终奖金额（元）</label>
-        <input type="number" id="bonusAmount" class="currency" value="50000" step="100" min="0">
+        <input type="number" id="bonusAmount" class="currency" placeholder="请输入年终奖金额" step="100" min="0">
         <span class="hint">全年一次性奖金</span>
       </div>
     </div>
@@ -227,13 +334,13 @@ input.currency { text-align: right; }
     <div class="form-row">
       <div class="form-group">
         <label>额外收入金额（元/年）</label>
-        <input type="number" id="extraIncome" class="currency" value="100000" step="1000" min="0">
+        <input type="number" id="extraIncome" class="currency" placeholder="请输入额外收入金额" step="1000" min="0">
         <span class="hint">要对比的这笔收入的总金额</span>
       </div>
       <div class="form-group">
         <label>劳务报酬单次支付金额（元）</label>
-        <input type="number" id="laborPerPayment" class="currency" value="100000" step="1000" min="0">
-        <span class="hint">预扣税按此计算（若分多次支付，可调小此项）</span>
+        <input type="number" id="laborPerPayment" class="currency" placeholder="请输入单次支付金额" step="1000" min="0">
+        <span class="hint">预扣税按此计算（若分多次支付，影响当次预缴金额）</span>
       </div>
     </div>
     <button class="btn btn-primary" onclick="compareLabor()">计算对比</button>
@@ -241,7 +348,154 @@ input.currency { text-align: right; }
   </div>
 </div>
 
+<!-- ===== TAX KNOWLEDGE PANELS ===== -->
+<div class="info-section">
+
+  <!-- 1. 年终奖临界点 -->
+  <div class="collapsible-header" onclick="toggleCollapsible(this)">
+    ⚠️ 年终奖临界点避雷区间（点击展开）
+  </div>
+  <div class="collapsible-body">
+    <table class="info-table">
+      <tr><th>年终奖金额</th><th>适用税率</th><th>速算扣除数</th><th>多发1元多缴税</th><th>无效区间（税后倒挂）</th></tr>
+      <tr class="cliff">
+        <td>≤36,000</td><td>3%</td><td>¥0</td><td>—</td>
+        <td>36,000 ~ 38,566</td>
+      </tr>
+      <tr class="cliff">
+        <td>36,001 ~ 144,000</td><td>10%</td><td>¥210</td><td>¥2,310</td>
+        <td>144,000 ~ 160,500</td>
+      </tr>
+      <tr class="cliff">
+        <td>144,001 ~ 300,000</td><td>20%</td><td>¥1,410</td><td>¥13,200</td>
+        <td>300,000 ~ 318,333</td>
+      </tr>
+      <tr class="cliff">
+        <td>300,001 ~ 420,000</td><td>25%</td><td>¥2,660</td><td>¥13,750</td>
+        <td>420,000 ~ 447,500</td>
+      </tr>
+      <tr class="cliff">
+        <td>420,001 ~ 660,000</td><td>30%</td><td>¥4,410</td><td>¥19,250</td>
+        <td>660,000 ~ 706,538</td>
+      </tr>
+      <tr class="cliff">
+        <td>660,001 ~ 960,000</td><td>35%</td><td>¥7,160</td><td>¥30,250</td>
+        <td>960,000 ~ 1,120,000</td>
+      </tr>
+      <tr>
+        <td>>960,000</td><td>45%</td><td>¥15,160</td><td>¥88,000</td><td>—</td>
+      </tr>
+    </table>
+    <div class="info-tip">
+      💡 <strong>无效区间说明：</strong>年终奖落在红色区间内，多发奖金但税后到手反而更少。例如发36,000元，税后到手34,920元；发38,566元，税后也是34,920元——多发的2,566元全缴了税。同理，144,000~160,500元区间多发16,500元，全被税吃掉。<br>
+      ⚡ <strong>避坑策略：</strong>年终奖尽量卡在临界点（36,000 / 144,000 / 300,000 / 420,000 / 660,000），多余部分可跟公司商量拆分到月薪发放。
+    </div>
+  </div>
+
+  <!-- 2. 综合所得税率表 -->
+  <div class="collapsible-header" onclick="toggleCollapsible(this)" style="margin-top:4px;">
+    📊 综合所得年度税率表（点击展开）
+  </div>
+  <div class="collapsible-body">
+    <table class="info-table">
+      <tr><th>级数</th><th>全年应纳税所得额</th><th>税率</th><th>速算扣除数</th></tr>
+      <tr><td>1</td><td>≤36,000</td><td>3%</td><td>¥0</td></tr>
+      <tr><td>2</td><td>36,000 ~ 144,000</td><td>10%</td><td>¥2,520</td></tr>
+      <tr><td>3</td><td>144,000 ~ 300,000</td><td>20%</td><td>¥16,920</td></tr>
+      <tr><td>4</td><td>300,000 ~ 420,000</td><td>25%</td><td>¥31,920</td></tr>
+      <tr><td>5</td><td>420,000 ~ 660,000</td><td>30%</td><td>¥52,920</td></tr>
+      <tr><td>6</td><td>660,000 ~ 960,000</td><td>35%</td><td>¥85,920</td></tr>
+      <tr><td>7</td><td>>960,000</td><td>45%</td><td>¥181,920</td></tr>
+    </table>
+    <div class="info-tip">
+      💡 综合所得 = 工资薪金 + 劳务报酬×80% + 稿酬×80%×70% + 特许权使用费×80%。应纳税所得额 = 综合所得 − ¥60,000 − 社保公积金 − 专项附加扣除。
+    </div>
+  </div>
+
+  <!-- 3. 劳务报酬预扣税率表 -->
+  <div class="collapsible-header" onclick="toggleCollapsible(this)" style="margin-top:4px;">
+    📝 劳务报酬预扣税率表（点击展开）
+  </div>
+  <div class="collapsible-body">
+    <table class="info-table">
+      <tr><th>预扣应纳税所得额（单次）</th><th>预扣税率</th><th>速算扣除数</th></tr>
+      <tr><td>≤20,000</td><td>20%</td><td>¥0</td></tr>
+      <tr><td>20,000 ~ 50,000</td><td>30%</td><td>¥2,000</td></tr>
+      <tr><td>>50,000</td><td>40%</td><td>¥7,000</td></tr>
+    </table>
+    <div class="info-tip">
+      💡 单次≤4,000元：预扣应税 = 收入 − 800；单次>4,000元：预扣应税 = 收入 × 80%。年度汇算时统一按80%计入综合所得，预扣多缴部分可退税。
+    </div>
+  </div>
+
+  <!-- 4. 经营所得五级累进税率表 -->
+  <div class="collapsible-header" onclick="toggleCollapsible(this)" style="margin-top:4px;">
+    🏪 经营所得五级累进税率表（点击展开）
+  </div>
+  <div class="collapsible-body">
+    <table class="info-table">
+      <tr><th>级数</th><th>全年应纳税所得额</th><th>税率</th><th>速算扣除数</th></tr>
+      <tr><td>1</td><td>≤30,000</td><td>5%</td><td>¥0</td></tr>
+      <tr><td>2</td><td>30,000 ~ 90,000</td><td>10%</td><td>¥1,500</td></tr>
+      <tr><td>3</td><td>90,000 ~ 300,000</td><td>20%</td><td>¥10,500</td></tr>
+      <tr><td>4</td><td>300,000 ~ 500,000</td><td>30%</td><td>¥40,500</td></tr>
+      <tr><td>5</td><td>>500,000</td><td>35%</td><td>¥65,500</td></tr>
+    </table>
+    <div class="info-tip">
+      💡 适用于个体工商户、个人独资企业、合伙企业投资者的经营所得。应纳税所得额 = 收入总额 − 成本 − 费用 − 损失。按年计算，按月或按季预缴，年终汇算清缴。
+    </div>
+  </div>
+
+  <!-- 5. 专项附加扣除速查 -->
+  <div class="collapsible-header" onclick="toggleCollapsible(this)" style="margin-top:4px;">
+    📋 专项附加扣除标准速查（点击展开）
+  </div>
+  <div class="collapsible-body">
+    <table class="info-table">
+      <tr><th>扣除项目</th><th>扣除标准</th><th>注意事项</th></tr>
+      <tr><td>子女教育</td><td>¥2,000/月/子女</td><td>3岁至博士均可，父母各扣50%或一方全扣</td></tr>
+      <tr><td>3岁以下婴幼儿照护</td><td>¥2,000/月/子女</td><td>2023年起新增，与子女教育衔接</td></tr>
+      <tr><td>继续教育</td><td>¥400/月 或 ¥3,600/年</td><td>学历教育或职业资格证书，二选一</td></tr>
+      <tr><td>住房贷款利息</td><td>¥1,000/月</td><td>仅限首套房，夫妻一方扣除，与租金二选一</td></tr>
+      <tr><td>住房租金</td><td>¥1,500/1,100/800/月</td><td>按城市级别：省会1,500 / >100万人口1,100 / 其他800</td></tr>
+      <tr><td>赡养老人</td><td>¥3,000/月（独生）</td><td>非独生子女可均摊或约定，每人最高¥1,500/月</td></tr>
+      <tr><td>大病医疗</td><td>自付超¥15,000部分，上限¥80,000</td><td>医保目录内，年度汇算时扣除</td></tr>
+      <tr><td>个人养老金</td><td>上限¥12,000/年</td><td>缴费时扣除，领取时按3%单独计税</td></tr>
+    </table>
+  </div>
+
+  <!-- 6. 个税涉税风险红线提醒 -->
+  <div class="collapsible-header" onclick="toggleCollapsible(this)" style="margin-top:4px;">
+    🚨 个税涉税风险红线提醒（点击展开）
+  </div>
+  <div class="collapsible-body">
+    <div class="info-tip" style="margin-top:0;">
+      <strong>⛔ 个税红线不能碰</strong><br>
+      · 禁止虚列人员发工资、虚增社保扣除、虚报专项附加扣除<br>
+      · 禁止公转私随意发补贴不走个税（银行流水与个税申报比对）<br>
+      · 灵活用工、劳务外包严禁用来拆分工资逃个税<br>
+      · 禁止通过多个公司拆分发放工资降低税率<br><br>
+
+      <strong>🔍 汇算清缴实操要点</strong><br>
+      · 每年 3-6 月必须自查：年终奖计税方式可一键更正重选（个税 APP 支持）<br>
+      · 两处以上收入务必合并汇算，避免漏税（系统自动带出多处收入数据）<br>
+      · 补税＜400 元或年收入＜12 万元可免于汇算清缴<br><br>
+
+      <strong>⚠️ 社保与个税匹配提醒</strong><br>
+      · 申报工资薪金人数、基数应尽量与社保人数/基数一致，税务重点比对<br>
+      · 社保基数＜工资基数将触发税务风险预警<br><br>
+
+      <strong>🌍 异地收入、外派收入计税规则</strong><br>
+      · 境内异地收入统一合并综合所得计税（两处以上合并汇算）<br>
+      · 境外收入可享受境外税收抵免，需提供境外完税证明<br>
+      · 外派人员境内境外收入均需申报，避免双重征税协定下的遗漏申报
+    </div>
+  </div>
+
+</div>
+
 <footer style="text-align:center; color:#94a3b8; font-size:12px; padding:24px 0;">
+  <span style="color:#dc2626;font-weight:700;">税得香微信：sz07551111</span><br>
   本工具基于中国大陆现行个人所得税法计算（截至2025年）· 年终奖单独计税政策有效期至2027年12月31日
 </footer>
 </div>
@@ -299,6 +553,17 @@ function getMarginalRate(taxable, brackets) {
   return brackets[brackets.length - 1].rate;
 }
 
+// 年终奖单独计税：先÷12找月均对应税率，再用全额×税率−速扣
+function calcBonusTax(bonus) {
+  if (bonus <= 0) return { tax: 0, rate: 0, qd: 0 };
+  const meq = bonus / 12;
+  for (const b of BONUS_BRACKETS) {
+    if (meq <= b.max) return { tax: bonus * b.rate - b.qd, rate: b.rate, qd: b.qd };
+  }
+  const last = BONUS_BRACKETS[BONUS_BRACKETS.length - 1];
+  return { tax: bonus * last.rate - last.qd, rate: last.rate, qd: last.qd };
+}
+
 function fmt(n) {
   if (Math.abs(n) < 0.01) return '¥0';
   return (n < 0 ? '-' : '') + '¥' + Math.abs(n).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -312,8 +577,8 @@ function pct(a, b) {
 // ==================== COMMON INPUTS ====================
 
 function getCommon() {
-  const monthlySalary = parseFloat(document.getElementById('monthlySalary').value) || 0;
-  const monthlySocial = parseFloat(document.getElementById('monthlySocial').value) || 0;
+  const monthlySalary = parseFloat((document.getElementById('monthlySalary').value || '').replace(/,/g, '')) || 0;
+  const monthlySocial = parseFloat((document.getElementById('monthlySocial').value || '').replace(/,/g, '')) || 0;
   const otherTax = parseFloat(document.getElementById('otherTax').value) || 0;
 
   const childEdu = parseInt(document.getElementById('childEdu').value) || 0;
@@ -344,11 +609,14 @@ function getCommon() {
   // Update display
   document.getElementById('deductionTotal').textContent = fmt(annualDeductions);
 
+  const annualSalary = monthlySalary;   // 汇总框已是1-12月合计
+  const annualSocial = monthlySocial;   // 汇总框已是1-12月合计
+
   return {
     monthlySalary,
     monthlySocial,
-    annualSalary: monthlySalary * 12,
-    annualSocial: monthlySocial * 12,
+    annualSalary,
+    annualSocial,
     annualDeductions,
     otherTax
   };
@@ -376,15 +644,10 @@ function compareBonus() {
   // 综合所得不含年终奖
   const compA = c.annualSalary;
   const rA = calcAnnualTax(compA, c.annualSocial, c.annualDeductions);
-  const bonusTax = calcBracketTax(bonus, BONUS_BRACKETS);
+  const bonusResult = calcBonusTax(bonus);
+  const bonusTax = bonusResult.tax;
+  const bonusRate = bonusResult.rate;
   const totalTaxA = Math.max(0, rA.tax) + bonusTax;
-
-  // Find which bonus bracket applied
-  const monthlyEq = bonus / 12;
-  let bonusRate = 0, bonusQD = 0;
-  for (const b of BONUS_BRACKETS) {
-    if (monthlyEq <= b.max) { bonusRate = b.rate; bonusQD = b.qd; break; }
-  }
 
   // 方案B：年终奖并入综合所得
   const compB = c.annualSalary + bonus;
@@ -422,7 +685,7 @@ function compareBonus() {
       <div class="tax-breakdown">
         <div class="line"><span>年度工资薪金</span><span>${fmt(c.annualSalary)}</span></div>
         <div class="line"><span>年终奖金额</span><span>${fmt(bonus)}</span></div>
-        <div class="line"><span>基本减除费用</span><span>−¥60,000</span></div>
+        <div class="line"><span>基本减除费用</span><span>−¥60,000.00</span></div>
         <div class="line"><span>五险一金（年）</span><span>−${fmt(c.annualSocial)}</span></div>
         <div class="line"><span>专项附加扣除（年）</span><span>−${fmt(c.annualDeductions)}</span></div>
       </div>
@@ -462,6 +725,16 @@ function compareBonus() {
           <td>实际税负率</td>
           <td>${pct(totalTaxA, c.annualSalary + bonus)}</td>
           <td>${pct(totalTaxB, c.annualSalary + bonus)}</td>
+        </tr>
+        <tr style="color:#64748b;">
+          <td>已预扣税款</td>
+          <td>${fmt(c.otherTax)}</td>
+          <td>${fmt(c.otherTax)}</td>
+        </tr>
+        <tr style="font-weight:700;">
+          <td>应补/退税</td>
+          <td style="color:${totalTaxA - c.otherTax > 0 ? '#dc2626' : '#059669'}">${totalTaxA - c.otherTax > 0 ? '补' : '退'} ${fmt(Math.abs(totalTaxA - c.otherTax))}</td>
+          <td style="color:${totalTaxB - c.otherTax > 0 ? '#dc2626' : '#059669'}">${totalTaxB - c.otherTax > 0 ? '补' : '退'} ${fmt(Math.abs(totalTaxB - c.otherTax))}</td>
         </tr>
       </table>
 
@@ -534,7 +807,7 @@ function compareLabor() {
         <div class="line"><span>现有工资薪金（年）</span><span>${fmt(c.annualSalary)}</span></div>
         <div class="line"><span>额外收入金额（年）</span><span>${fmt(extraIncome)}</span></div>
         <div class="line"><span>—— 劳务报酬计入综合所得</span><span>${fmt(laborContribution)}（80%）</span></div>
-        <div class="line"><span>基本减除费用</span><span>−¥60,000</span></div>
+        <div class="line"><span>基本减除费用</span><span>−¥60,000.00</span></div>
         <div class="line"><span>五险一金（年）</span><span>−${fmt(c.annualSocial)}</span></div>
         <div class="line"><span>专项附加扣除（年）</span><span>−${fmt(c.annualDeductions)}</span></div>
       </div>
@@ -593,6 +866,16 @@ function compareLabor() {
           <td>${pct(totalTaxA, c.annualSalary + extraIncome)}</td>
           <td>${pct(totalTaxB, c.annualSalary + extraIncome)}</td>
         </tr>
+        <tr style="color:#64748b;">
+          <td>其他已预扣税款</td>
+          <td>${fmt(c.otherTax)}</td>
+          <td>${fmt(c.otherTax)}</td>
+        </tr>
+        <tr style="font-weight:700;">
+          <td>预计应补/退税</td>
+          <td style="color:${totalTaxA - c.otherTax > 0 ? '#dc2626' : '#059669'}">${totalTaxA - c.otherTax > 0 ? '补' : '退'} ${fmt(Math.abs(totalTaxA - c.otherTax))}</td>
+          <td style="color:${totalTaxB - c.otherTax > 0 ? '#dc2626' : '#059669'}">${totalTaxB - c.otherTax > 0 ? '补' : '退'} ${fmt(Math.abs(totalTaxB - c.otherTax))}</td>
+        </tr>
       </table>
 
       <div class="recommendation ${recClass}">
@@ -638,11 +921,73 @@ function toggleCollapsible(header) {
   header.nextElementSibling.classList.toggle('open');
 }
 
+function clearAll() {
+  // Clear all input fields (including readonly summary fields)
+  document.querySelectorAll('input[type="number"]').forEach(el => {
+    el.value = '';
+  });
+  // Reset all selects to first option
+  document.querySelectorAll('select').forEach(el => {
+    el.selectedIndex = 0;
+  });
+  // Clear results
+  document.getElementById('bonusResult').innerHTML = '';
+  document.getElementById('laborResult').innerHTML = '';
+  // Update deductions display
+  getCommon();
+}
+
+// ==================== MONTHLY GRID ====================
+
+function buildMonthGrids() {
+  const months = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+  ['salaryGrid','socialGrid'].forEach(gridId => {
+    const grid = document.getElementById(gridId);
+    grid.innerHTML = '';
+    const prefix = gridId === 'salaryGrid' ? 'salary' : 'social';
+    months.forEach((m, i) => {
+      const div = document.createElement('div');
+      div.className = 'month-item';
+      div.innerHTML = `<label>${m}</label><input type="number" id="${prefix}_${i+1}" min="0" step="100" onchange="updateSum('${prefix}')" oninput="updateSum('${prefix}')">`;
+      grid.appendChild(div);
+    });
+  });
+}
+
+function updateSum(type) {
+  let total = 0;
+  for (let i = 1; i <= 12; i++) {
+    total += parseFloat(document.getElementById(type + '_' + i).value) || 0;
+  }
+  const formatted = total > 0 ? total.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '';
+  if (type === 'salary') {
+    document.getElementById('monthlySalary').value = formatted;
+    document.getElementById('monthlySalary').setAttribute('data-raw', total || '0');
+  } else {
+    document.getElementById('monthlySocial').value = formatted;
+    document.getElementById('monthlySocial').setAttribute('data-raw', total || '0');
+  }
+  getCommon();
+}
+
 // ==================== INIT ====================
-// Update deduction display on any input change
-document.querySelectorAll('input, select').forEach(el => {
-  el.addEventListener('input', () => getCommon());
-  el.addEventListener('change', () => getCommon());
+buildMonthGrids();
+
+// Filter: only allow digits and decimal point (skip readonly summary boxes)
+document.querySelectorAll('input[type="number"]:not([readonly])').forEach(function(el) {
+  el.addEventListener('input', function() {
+    var v = el.value.replace(/[^\d.]/g, '');
+    var parts = v.split('.');
+    if (parts.length > 2) v = parts[0] + '.' + parts.slice(1).join('');
+    el.value = v;
+    getCommon();
+  });
+  el.addEventListener('change', function() { getCommon(); });
+});
+
+// Select elements trigger deduction update
+document.querySelectorAll('select').forEach(function(el) {
+  el.addEventListener('change', function() { getCommon(); });
 });
 
 // Initial calculation
