@@ -922,9 +922,14 @@ function toggleCollapsible(header) {
 }
 
 function clearAll() {
-  // Clear all input fields (including readonly summary fields)
+  // Clear all number input fields
   document.querySelectorAll('input[type="number"]').forEach(el => {
     el.value = '';
+  });
+  // Clear summary text boxes
+  document.querySelectorAll('.summary-box').forEach(el => {
+    el.value = '';
+    el.setAttribute('data-raw', '0');
   });
   // Reset all selects to first option
   document.querySelectorAll('select').forEach(el => {
